@@ -9,7 +9,8 @@ var cards = (function() {
 		acesHigh : false,
 		cardsUrl : 'img/cards.png',
 		blackJoker : false,
-		redJoker : false
+		redJoker : false,
+		shortDeck: true
 	};
 	var zIndexCounter = 1;
 	var all = []; //All the cards created.
@@ -32,8 +33,8 @@ var cards = (function() {
 				}
 			}
 		}
-		var start = opt.acesHigh ? 2 : 1;
-		var end = start + 12;
+		var start = opt.shortDeck ? 7 : opt.acesHigh ? 2 : 1;
+		var end = start + (opt.shortDeck ? 12 : 7);
 		opt.table = $(opt.table)[0];
 		if ($(opt.table).css('position') == 'static') {
 			$(opt.table).css('position', 'relative');
