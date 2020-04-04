@@ -3,7 +3,7 @@ var cards = (function() {
 	//The global options
 	var opt = {
 		cardSize : {width:69,height:94, padding:18},
-		animationSpeed : 500,
+		animationSpeed : 100,
 		table : 'body',
 		cardback : 'red',
 		acesHigh : false,
@@ -34,7 +34,7 @@ var cards = (function() {
 			}
 		}
 		var start = opt.shortDeck ? 7 : opt.acesHigh ? 2 : 1;
-		var end = start + (opt.shortDeck ? 12 : 7);
+		var end = start + (opt.shortDeck ? 7 : 12);
 		opt.table = $(opt.table)[0];
 		if ($(opt.table).css('position') == 'static') {
 			$(opt.table).css('position', 'relative');
