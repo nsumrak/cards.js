@@ -1,9 +1,9 @@
-﻿
+
 var cards = (function() {
 	//The global options
 	var opt = {
 		cardSize : {width:69,height:94, padding:18},
-		animationSpeed : 100,
+		animationSpeed : 500,
 		table : 'body',
 		cardback : 'red',
 		acesHigh : false,
@@ -128,6 +128,14 @@ var cards = (function() {
 			this.rotate(0);
 		},
 		
+		bounce : function() {
+			var speed = opt.animationSpeed;
+			var el = this.el;
+			$(el).animate({ "top": "-=20px" }, speed/2, "swing", function () {
+				$(el).animate({ "top": "+=20px" }, speed/2);
+			});
+		},
+
 		moveToFront : function() {
 			$(this.el).css('z-index', zIndexCounter++);
 		}		
@@ -169,6 +177,47 @@ var cards = (function() {
 			return false;
 		},
 
+		getNum : function() {
+			var ret = { c:0, d:0, h:0, s:0};
+			for (var i=0; i< this.length;i++) {
+				ret[this[i].suit] += 1;
+			}
+			return ret;
+		},
+
+		getSortOrder : function() {
+			var a = this.getNum();
+			if(a['s'] != 0) {
+				if(a['d'] != 0) {
+						if(a['h'] != 0) {
+							if(a['c'] != 0)
+								return ['s', 'd', 'c', 'h'];
+							else 
+								return ['d', 's', 'h', 'c'];
+						} else {
+							return ['s', 'd', 'c', 'h'];
+						}
+				} else {
+					return ['s', 'd', 'h', 'c'];
+				}
+			} else {
+				if(a['d'] == 0)
+					return ['s', 'd', 'h', 'c'];
+				else
+					return ['d', 'c', 'h', 's'];
+			}
+		},
+
+		sortHand : function() {
+			var ord = this.getSortOrder();
+			this.sort(function (a,b) {
+				var ai = ord.indexOf(a.suit);
+				var bi = ord.indexOf(b.suit);
+				if(ai == bi) return a.rank - b.rank;
+				return ai - bi;
+			});
+		},
+
 		init : function(options) {
 			options = options || {};
 			this.x = options.x || $(opt.table).width()/2;
@@ -188,20 +237,29 @@ var cards = (function() {
 			this._mouseup = {func:func,context:context};
 		},
 		
+		hide : function(after) {
+			var speed = opt.animationSpeed;
+			for (var i=0;i<this.length;i++) {
+				var card = this[i];
+				$(card.el).hide();
+			}
+		},
+
 		render : function(options) {
 			options = options || {};
 			var speed = options.speed || opt.animationSpeed;
 			this.calcPosition(options);
 			for (var i=0;i<this.length;i++) {
 				var card = this[i];
-				zIndexCounter++;
+				//zIndexCounter++;
 				card.moveToFront();
 				var top = parseInt($(card.el).css('top'));
 				var left = parseInt($(card.el).css('left'));
 				if (top != card.targetTop || left != card.targetLeft) {
 					var props = {top:card.targetTop, left:card.targetLeft, queue:false};
 					if (options.immediate) {
-						$(card.el).css(props);
+						$(card.el).animate(props, 0);
+						//$(card.el).css(props);
 					} else {
 						$(card.el).animate(props, speed);
 					}
@@ -341,4 +399,3 @@ var cards = (function() {
 if (typeof module !== 'undefined') {
     module.exports = cards;
 }
-
