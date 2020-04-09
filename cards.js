@@ -69,6 +69,28 @@ var cards = (function() {
         }
     }
 	
+	function suit2num(rank) {
+		if(rank=='s') return 0;
+		if(rank=='d') return 1;
+		if(rank=='h') return 2;
+		return 3;
+	}
+
+	function num2suit(rank) {
+		if(rank==0) return 's';
+		if(rank==1) return 'd';
+		if(rank==2) return 'h';
+		return 'c';
+	}
+
+	function copy(deck) {
+		var res = [];
+		for(var i=0; i<deck.length; i++) {
+			res.push(deck[i].toNum());
+		}
+		return res;
+	}
+
 	function Card(suit, rank, table) {
 		this.init(suit, rank, table);
 	}
@@ -93,6 +115,10 @@ var cards = (function() {
 
 		toString: function () {
 			return this.name;
+		},
+
+		toNum: function () {
+			return (suit2num(this.suit)*8)+(this.rank-7);
 		},
 
 		moveTo : function(x, y, speed, callback) {
@@ -225,6 +251,10 @@ var cards = (function() {
 			this.faceUp = options.faceUp;
 		},
 
+		off : function() {
+			this._click = null;
+		},
+
 		click : function(func, context) {
 			this._click = {func:func,context:context};
 		},
@@ -253,10 +283,11 @@ var cards = (function() {
 				var card = this[i];
 				//zIndexCounter++;
 				card.moveToFront();
+				$(card.el).show();
 				var top = parseInt($(card.el).css('top'));
 				var left = parseInt($(card.el).css('left'));
 				if (top != card.targetTop || left != card.targetLeft) {
-					var props = {top:card.targetTop, left:card.targetLeft, queue:false};
+					var props = {top:card.targetTop, left:card.targetLeft, opacity: 1, queue:false};
 					if (options.immediate) {
 						$(card.el).animate(props, 0);
 						//$(card.el).css(props);
@@ -289,7 +320,42 @@ var cards = (function() {
 		topCard : function() {
 			return this[this.length-1];
 		},
+
+		findcard : function (card)
+		{
+			for(var i=0; i<this.length; i++)
+				if(this[i].rank == card.rank && this[i].suit == card.suit)
+					return i;
+			return -1;
+		},
+
+		findcardnum: function(num) {
+			return this.findcard({ suit: num2suit(num>>3), rank: (num&0x7)+7 });
 		
+		},
+
+		getcards4num : function (dcopy)
+		{
+			var crd = [];
+			for(var i=0; i<dcopy.length; i++) {
+				var j = this.findcard({ suit: num2suit(dcopy[i]>>3), rank: (dcopy[i]&0x7)+7 });
+				if(j>=0)
+					crd.push(this[j]);
+			}
+			return crd;
+		},
+
+		slozi : function(dcopy) {
+			for(var i=0; i<dcopy.length; i++) {
+				var j = this.findcard({ suit: num2suit(dcopy[i]>>3), rank: (dcopy[i]&0x7)+7 })
+				if(j>=0) {
+					var t = this[j];
+					this.splice(j,1);
+					this.push(t);
+				}
+			}
+		},
+	
 		toString: function() {
 			return 'Container';
 		}
@@ -326,14 +392,22 @@ var cards = (function() {
 			var totalCount = count*hands.length;
 			function dealOne() {
 				if (me.length == 0 || i == totalCount) {
+					if(!speed) {
+						for(var j=0; j<hands.length; j++)
+							hands[j].render({immediate:true});
+					}
 					if (callback) {
 						callback();
 					}
 					return;
 				}
-				hands[i%hands.length].addCard(me.topCard());
-				hands[i%hands.length].render({callback:dealOne, speed:speed});
+				var y = Math.floor(i/count);
+				hands[y].addCard(me.topCard());
 				i++;
+				if(!speed)
+					dealOne();
+				else
+					hands[y].render({callback:dealOne, speed:speed});
 			}
 			dealOne();
 		}
@@ -392,10 +466,14 @@ var cards = (function() {
 		Deck : Deck,
 		Hand : Hand,
 		Pile : Pile,
-		shuffle: shuffle
-	};
+		shuffle: shuffle,
+		copy: copy,
+		suit2num: suit2num,
+		num2suit: num2suit
+};
 })();
 
 if (typeof module !== 'undefined') {
     module.exports = cards;
 }
+
